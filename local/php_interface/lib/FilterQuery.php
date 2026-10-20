@@ -83,6 +83,118 @@ class FilterQuery
     }
 
     /**
+     * Парсит фильтры из $_GET.
+     * Поддерживает ?brand[]=307&brand[]=308 и ?brand=307,308
+     */
+    public static function parseFiltersFromRequest(): array
+    {
+        $active = [];
+        foreach (self::HL_MAP as $code => $hlId) {
+            $param = strtolower($code);
+            if (empty($_GET[$param])) {
+                continue;
+            }
+
+            $raw = $_GET[$param];
+            if (is_array($raw)) {
+                $ids = array_filter(array_map('intval', $raw), fn($v) => $v > 0);
+            } else {
+                $ids = array_filter(
+                    array_map('intval', explode(',', (string)$raw)),
+                    fn($v) => $v > 0
+                );
+            }
+
+            if (!empty($ids)) {
+                $active[$code] = array_values(array_unique($ids));
+            }
+        }
+        return $active;
+    }
+
+    /**
+     * Возвращает товары с пагинацией (LIMIT + OFFSET).
+     *
+     * @param array $filters
+     * @param int $limit
+     * @param int $offset
+     * @return array Массив строк: ID, NAME, PREVIEW_TEXT, DETAIL_PAGE_URL
+     */
+    public static function getElements(array $filters, int $limit = 24, int $offset = 0): array
+    {
+        Loader::includeModule('iblock');
+        Loader::includeModule('highloadblock');
+
+        $runtime = [];
+        $filter = [
+            '=IBLOCK_ID' => self::IBLOCK_ID,
+            '=ACTIVE'    => 'Y',
+        ];
+
+        foreach ($filters as $code => $valueIds) {
+            if (empty($valueIds) || !isset(self::HL_MAP[$code])) {
+                continue;
+            }
+            $refName = 'REF_' . $code;
+            $entityClass = self::getEntityClass(self::HL_MAP[$code]);
+
+            $runtime[] = new ReferenceField(
+                $refName,
+                $entityClass,
+                Join::on('this.ID', 'ref.UF_PRODUCT_ID'),
+                ['join_type' => 'INNER']
+            );
+
+            $filter['=' . $refName . '.UF_VALUE_ID'] = array_map('intval', $valueIds);
+        }
+
+        $params = [
+            // Запрашиваем шаблон URL из настроек инфоблока
+            'select' => [
+                'ID',
+                'NAME',
+                'PREVIEW_TEXT',
+                'CODE',
+                'IBLOCK_SECTION_ID',
+                'DETAIL_PAGE_URL_TEMPLATE' => 'IBLOCK.DETAIL_PAGE_URL', // <-- ключевой момент
+            ],
+            'filter' => $filter,
+            'order'  => ['ID' => 'ASC'],
+            'limit'  => $limit,
+            'offset' => $offset,
+        ];
+
+        if (!empty($runtime)) {
+            $params['runtime'] = $runtime;
+            // Для MySQL 8 с ONLY_FULL_GROUP_BY нужно добавить все поля в GROUP BY
+            $params['group'] = [
+                'ID',
+                'NAME',
+                'PREVIEW_TEXT',
+                'CODE',
+                'IBLOCK_SECTION_ID',
+                'IBLOCK.DETAIL_PAGE_URL',
+            ];
+        }
+
+        $result = ElementTable::getList($params);
+
+        $items = [];
+        while ($row = $result->fetch()) {
+            // Подставляем реальные данные элемента в шаблон URL
+            $row['DETAIL_PAGE_URL'] = \CIBlock::ReplaceDetailUrl(
+                $row['DETAIL_PAGE_URL_TEMPLATE'],
+                $row,
+                true,
+                'E'
+            );
+            $items[] = $row;
+        }
+
+        return $items;
+    }
+
+    /**
      * Возвращает имя таблицы HL-блока по его ID.
      */
     private static function getTableName(int $hlBlockId): string

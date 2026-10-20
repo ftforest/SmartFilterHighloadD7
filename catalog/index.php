@@ -28,25 +28,10 @@ $APPLICATION->SetTitle("Каталог товаров");
         <div style="flex: 1;">
             <?
             $APPLICATION->IncludeComponent(
-                    "bitrix:catalog.section",
+                    "pet:catalog",
                     "",
                     [
-                            "IBLOCK_TYPE"           => "pet_catalog",
-                            "IBLOCK_ID"             => "34",
-                            "SECTION_ID"            => "",
-                            "SECTION_CODE"          => "",
-                            "FILTER_NAME"           => "arrPetFilter",  // ← имя из pet:filter
-                            "PAGE_ELEMENT_COUNT"    => "24",
-                            "LINE_ELEMENT_COUNT"    => "3",
-                            "CACHE_TYPE"            => "N",             // для замеров кэш выключен
-                            "CACHE_TIME"            => "0",
-                            "CACHE_FILTER"          => "N",
-                            "CACHE_GROUPS"          => "N",
-                            "ELEMENT_SORT_FIELD"    => "sort",
-                            "ELEMENT_SORT_ORDER"    => "asc",
-                            "PROPERTY_CODE"         => ["BRAND", "PRICE", "COLOR"],
-                            "SHOW_ALL_WO_SECTION"   => "Y",
-                            "SET_TITLE"             => "N",
+                            "PAGE_SIZE" => 24,
                     ],
                     false
             );

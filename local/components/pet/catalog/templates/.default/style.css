@@ -1,0 +1,40 @@
+.pet-catalog__nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 20px;
+    align-items: center;
+    font-size: 14px;
+}
+
+.pet-catalog__nav a,
+.pet-catalog__nav strong,
+.pet-catalog__nav span {
+    display: inline-block;
+    padding: 6px 10px;
+    border-radius: 4px;
+    text-decoration: none;
+    color: #333;
+    min-width: 32px;
+    text-align: center;
+}
+
+.pet-catalog__nav a:hover {
+    background: #ececec;
+}
+
+.pet-catalog__nav strong {
+    background: #5b47d6;
+    color: #fff;
+    font-weight: 600;
+}
+
+.pet-catalog__nav .is-dots {
+    color: #999;
+    pointer-events: none;
+}
+
+.pet-catalog__nav .is-disabled {
+    color: #ccc;
+    pointer-events: none;
+}

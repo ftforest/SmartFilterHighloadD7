@@ -4,7 +4,8 @@
   "type": "project",
   "require": {
     "php": ">=8.2",
-    "fakerphp/faker": "^1.23"
+    "fakerphp/faker": "^1.23",
+    "smi2/phpclickhouse": "^1.26"
   },
   "autoload": {
     "psr-4": {
